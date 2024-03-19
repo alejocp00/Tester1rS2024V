@@ -11,9 +11,17 @@ namespace MatCom.Tester;
 
 public enum TestType
 {
-    SolvingProblems,
-    NotRepeatedValues,
-    EmptyOperators
+    // TODO: Aquí se definen los tipos de test. Han de coincidir con el nombre de las pruebas a ejecutar
+    AllPositive,
+    FactorWithNegatives,
+    OperatorsWithNegatives,
+    AllNegatives,
+    // NoOperators,
+    NonRepeatedValuesAllPositive,
+    NonRepeatedValuesFactorWithNegatives,
+    NonRepeatedValuesOperatorsWithNegatives,
+    NonRepeatedValuesAllNegatives,
+
 }
 
 public static class Utils

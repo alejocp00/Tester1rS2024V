@@ -22,13 +22,11 @@ public static class TestResult
         var dict = new Dictionary<TestType, List<bool>>();
         foreach (var item in list)
         {
-            var testName = item["@testName"]!.ToString();
-
-            var splited = testName.Split(new char[] { '.' }, StringSplitOptions.RemoveEmptyEntries);
-
-            testName = splited[3];
-
-            testName = testName.Split(new char[] { '(' }, StringSplitOptions.RemoveEmptyEntries).First();
+            var testName = item["@testName"]!.ToString()
+                .Split(new char[] { '.' }, StringSplitOptions.RemoveEmptyEntries)
+                .Last()
+                .Split(new char[] { '(' }, StringSplitOptions.RemoveEmptyEntries)
+                .First();
 
             var outcome = item["@outcome"]!.ToString();
             var test = (TestType)Enum.Parse(typeof(TestType), testName);
@@ -39,14 +37,16 @@ public static class TestResult
             }
             else
             {
+                Console.WriteLine(test);
                 dict.Add(test, new List<bool> { result });
             }
         }
 
-        int testsToRun = 3;
+        // TODO: Cambiar según la cantidad de pruebas ejecutadas
+        int testsToRun = 8;
         if (dict.Count != testsToRun)
         {
-            throw new TimeoutException("No se corrieron todos los tests");
+            throw new InvalidDataException("No se corrieron todos los tests");
         }
 
         return dict;
