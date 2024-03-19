@@ -401,3 +401,5 @@ FodyWeavers.xsd
 # Built Visual Studio Code Extensions
 *.vsix
 solutions/*.cs
+New Folder/
+.output/
