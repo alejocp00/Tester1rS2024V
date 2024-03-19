@@ -5,11 +5,11 @@ using System.Text;
 
 namespace MatCom.Examen;
 
-public class JaimesCurse
+public class JaimesPineapple
 {
-    public static string Solve(string[] words, char[] c)
+    public static int Solve(int[,] matrix, int[] factors, int[] operations)
     {
-        // Inserte su codigo aqui.
+        // Inserte su código aquí.
         throw new NotImplementedException("Sustituya esta excepción por su implementación");
     }
 }

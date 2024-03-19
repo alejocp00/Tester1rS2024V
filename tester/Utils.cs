@@ -12,98 +12,121 @@ namespace MatCom.Tester;
 public enum TestType
 {
     SolvingProblems,
-    EmptyCharArray,
-    EmptyWords
+    NotRepeatedValues,
+    EmptyOperators
 }
 
 public static class Utils
 {
-    public static string SolveProblem(string[] words, char[] c)
+    public static int SolveProblem(int[,] matrix, int[] factors, int[] operations)
     {
-        return JaimesCurse.Solve(words, c);
+        return JaimesPineapple.Solve(matrix, factors, operations);
     }
+
 }
 
 public class ProblemGenerator
 {
     public int Seed { get; }
-    private Random randomCharSelector { get; }
-    private Random randomWordSizeSelector { get; }
-    private char[] chars = { 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'ñ', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z' };
+    private Random randomGenerator;
 
     public ProblemGenerator(int seed)
     {
         Seed = seed;
-        randomCharSelector = new Random(seed);
-        randomWordSizeSelector = new Random(seed + 1);
+        randomGenerator = new Random(seed);
 
     }
 
-    private string GenerateString(int minSize, int maxSize)
+    private int[] GenerateArray(int minFactorsSize, int maxFactorSize, int minValue, int maxValue, bool fixedArray = false)
     {
-        var size = randomWordSizeSelector.Next(minSize, maxSize);
-        var result = new StringBuilder(size);
-        for (int i = 0; i < size; i++)
+        var result = fixedArray ? new int[maxFactorSize] : new int[randomGenerator.Next(minFactorsSize, maxFactorSize)];
+        for (int i = 0; i < result.Length; i++)
         {
-            result.Append(chars[randomCharSelector.Next(chars.Length)]);
-        }
-
-        return result.ToString();
-    }
-
-    private string[] GenerateArray(int minStringSize, int maxStringSize, int maxArraySize)
-    {
-        int size = new Random(Seed).Next(1, maxArraySize);
-        var result = new string[size];
-        for (int i = 0; i < size; i++)
-        {
-            result[i] = GenerateString(minStringSize, maxStringSize);
+            result[i] = randomGenerator.Next(minValue, maxValue);
         }
         return result;
     }
 
-    private char[] GetCharArray(int aMaxSize)
+    private int[,] GenerateMatrix(int rows, int columns, int minValue, int maxValue, bool repeatedValues)
     {
-        int size = randomCharSelector.Next(0, aMaxSize);
-        char[] result = new char[size];
-
-        for (int i = 0; i < size; i++)
+        var result = new int[rows, columns];
+        int counter = 1;
+        for (int i = 0; i < rows; i++)
         {
-            result[i] = chars[randomCharSelector.Next(chars.Length)];
+            for (int j = 0; j < columns; j++)
+            {
+                int number = repeatedValues ? randomGenerator.Next(minValue, maxValue) : counter++;
+                result[i, j] = number;
+            }
         }
         return result;
-
     }
-    public Tuple<string[], char[]> GetProblem(int minStringSize, int maxStringSize, int sMaxArraySize, int cMaxArraySize = -1) => new Tuple<string[], char[]>(GenerateArray(minStringSize, maxStringSize, sMaxArraySize), GetCharArray(cMaxArraySize)!);
+
+    public Tuple<int[,], int[], int[]> GetProblem(int rows, int columns, int minValueMatrix, int maxValueMatrix, bool repeatedValues, int minFactorsSize, int maxFactorSize, int minValueFactors, int maxValueFactors, int minOperationsSize, int maxOperationsSize, int minValueOperations, int maxValueOperations)
+    {
+        var matrix = GenerateMatrix(rows, columns, minValueMatrix, maxValueMatrix, repeatedValues);
+        var factors = GenerateArray(minFactorsSize, rows, minValueFactors, maxValueFactors, true);
+        var operations = GenerateArray(minOperationsSize, maxOperationsSize, minValueOperations, maxValueOperations);
+        return new Tuple<int[,], int[], int[]>(matrix, factors, operations);
+    }
 }
 
 public class ProblemGestor
 {
     public int Seed { get; }
     public int SeedForLimits { get; }
-    private List<Tuple<string[], char[]>> problems { get; }
+    private List<Tuple<int[,], int[], int[]>> problems;
     public ProblemGestor(int seed)
     {
         Seed = seed;
         SeedForLimits = seed - 1;
-        problems = new List<Tuple<string[], char[]>>();
+        problems = new List<Tuple<int[,], int[], int[]>>();
     }
 
-    public List<Tuple<string[], char[]>> GetProblems(int amount, int minWordSize, int maxWordSize, int arraySize, int cArraySize)
+    public List<Tuple<int[,], int[], int[]>> GetProblems(int amount, bool repeatedValues = true)
     {
 
-        if (problems.Count > 0)
-        {
-            return problems;
-        }
+        var generator = new ProblemGenerator(Seed);
+        var randomGenerator = new Random(SeedForLimits);
+        int maxRows = 100;
+        int rows = randomGenerator.Next(1, maxRows);
+        int maxColumns = 100;
+        int columns = randomGenerator.Next(1, maxColumns);
+        int minValueMatrix = -100;
+        int maxValueMatrix = 100;
+        int minFactorsSize = 0;
+        int maxFactorSize = 100;
+        int minValueFactors = -100;
+        int maxValueFactors = 100;
+        int minOperationsSize = 0;
+        int maxOperationsSize = 100;
+        int minValueOperations = -100;
+        int maxValueOperations = 100;
 
-        var random = new Random(SeedForLimits);
         for (int i = 0; i < amount; i++)
         {
-            var generator = new ProblemGenerator(Seed + i);
-            problems.Add(generator.GetProblem(minWordSize, maxWordSize, arraySize, cArraySize));
+            problems.Add(generator.GetProblem(rows, columns, minValueMatrix, maxValueMatrix, repeatedValues, minFactorsSize, maxFactorSize, minValueFactors, maxValueFactors, minOperationsSize, maxOperationsSize, minValueOperations, maxValueOperations));
         }
-        return problems;
+
+        return CloneProblems(problems);
+
+
+    }
+
+    private List<Tuple<int[,], int[], int[]>> CloneProblems(List<Tuple<int[,], int[], int[]>> inProblems)
+    {
+        var result = new List<Tuple<int[,], int[], int[]>>();
+        foreach (var problem in inProblems)
+        {
+            var matrix = new int[problem.Item1.GetLength(0), problem.Item1.GetLength(1)];
+            Array.Copy(problem.Item1, matrix, problem.Item1.Length);
+            var factors = new int[problem.Item2.Length];
+            Array.Copy(problem.Item2, factors, problem.Item2.Length);
+            var operations = new int[problem.Item3.Length];
+            Array.Copy(problem.Item3, operations, problem.Item3.Length);
+            result.Add(new Tuple<int[,], int[], int[]>(matrix, factors, operations));
+        }
+        return result;
     }
 
     public void ExportProblems(string path)
@@ -116,35 +139,41 @@ public class ProblemGestor
         File.WriteAllText(path, json);
     }
 
-    private static string Solve(string[] words, char[] c)
+    public static int Solve(int[,] matrix, int[] factors, int[] operations)
     {
-        var result = new List<string>(words);
-        var currentWord = 0;
+        int[] center = new int[factors.Length];
+        bool[,] mask = new bool[matrix.GetLength(0), matrix.GetLength(1)];
 
-        foreach (var ch in c)
+        for (int i = 0; i < factors.Length; i++)
+            center[i] = factors.Length / 2;
+
+        int sum = 0;
+        for (int i = 0; i < operations.Length; i++)
         {
-            var startIndex = currentWord;
-
-            do
+            for (int j = 0; j < factors.Length; j++)
             {
-                if (result[currentWord].StartsWith(ch))
-                {
-                    result[currentWord] = result[currentWord][1..];
-                    break;
-                }
-                currentWord = (currentWord + 1) % words.Length;
-            } while (startIndex != currentWord);
+                center[j] = FindCenter(center[j], operations[i] * factors[j], matrix.GetLength(1));
+                if (!mask[j, center[j]])
+                    sum += matrix[j, center[j]];
+                mask[j, center[j]] = true;
+            }
         }
-
-        return string.Join("", result);
+        return sum;
     }
 
-    public List<string> GetSolutions()
+    public static int FindCenter(int center, int rotation, int size)
     {
-        var results = new List<string>();
-        foreach (var problem in problems)
+        int result = (center - rotation) % size;
+        if (result < 0) return size + result;
+        else return result;
+    }
+
+    public List<int> GetSolutions()
+    {
+        var results = new List<int>();
+        foreach (var problem in CloneProblems(problems))
         {
-            results.Add(Solve(problem.Item1, problem.Item2));
+            results.Add(Solve(problem.Item1, problem.Item2, problem.Item3));
         }
         return results;
     }

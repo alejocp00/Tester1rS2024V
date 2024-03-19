@@ -9,7 +9,7 @@ File.WriteAllLines(Path.Combine(".output", "result.md"), new[]
 {
     "# Results of MatCom Programming Contest #1",
     "",
-    "| Estudiante | Aprobado | Problemas Resueltos | Pasa Chars Vacío | Pasa Una Palabra Vacía |",
+    "| Estudiante | Aprobado | Problemas Resueltos | Problemas Resueltos Sin Números | Pasa Operations Vacío |",
     "|------------|----------|---------------------|------------------|---------------------|"
 });
 
@@ -64,12 +64,14 @@ foreach (var solution in Directory.GetFiles("solutions", "*.cs"))
 
         continue;
     }
-    var solved = SolvedProblems(dict);
+    var solved = GetCount(TestType.SolvingProblems, dict);
+    var solvedNotRepeated = GetCount(TestType.NotRepeatedValues, dict);
     File.AppendAllLines(Path.Combine(".output", "result.md"), new[]
     {
         $"| {student} {group}| {( TestResult.IsApproved(dict) ? "🟢" : "🔴" )} "+
-        $"| {solved.Item1}/{solved.Item2} | {(dict[TestType.EmptyCharArray][0]? "🟢" : "🔴" )} " +
-        $"| {(dict[TestType.EmptyWords][0]? "🟢" : "🔴" )} |"
+        $"| {solved.Item1}/{solved.Item2}"+
+        $"| {solvedNotRepeated.Item1}/{solvedNotRepeated.Item2}"+
+        $"| {(dict[TestType.EmptyOperators][0]? "🟢" : "🔴" )} |"
 
     });
 
@@ -85,10 +87,10 @@ foreach (var file in Directory.GetFiles("solutions/base", "*.cs"))
 
 Directory.GetFiles(".output", "*.trx").ToList().ForEach(File.Delete);
 
-static Tuple<int, int> SolvedProblems(Dictionary<TestType, List<bool>> dict)
+static Tuple<int, int> GetCount(TestType test, Dictionary<TestType, List<bool>> dict)
 {
-    int total = dict[TestType.SolvingProblems].Count;
-    int solved = dict[TestType.SolvingProblems].Count(x => x);
+    int total = dict[test].Count;
+    int solved = dict[test].Count(x => x);
 
     return new Tuple<int, int>(solved, total);
 

@@ -12,48 +12,52 @@ public class UnitTest
 {
 
 
-    public static IEnumerable<object[]> ProblemsData()
+    public static IEnumerable<object[]> ProblemsData(bool repeatedValues)
     {
         int seed = 2024;
         int amount = 100;
-        int minStringSize = 1;
-        int maxStringSize = 100;
-        int sArraySize = 50;
-        int cArraySize = 100;
-
         var gestor = new ProblemGestor(seed);
 
-        var problems = gestor.GetProblems(amount, minStringSize, maxStringSize, sArraySize, cArraySize);
+        var problems = gestor.GetProblems(amount, repeatedValues);
         var solutions = gestor.GetSolutions();
 
         for (int i = 0; i < amount; i++)
         {
-            yield return new object[] { problems[i].Item1, problems[i].Item2, solutions[i] };
+            yield return new object[] { problems[i].Item1, problems[i].Item2, problems[i].Item3, solutions[i] };
         }
 
     }
+    public static IEnumerable<object[]> RepeatedValuesData() => ProblemsData(true);
+    public static IEnumerable<object[]> NotRepeatedValuesData() => ProblemsData(false);
+
 
     [Theory]
-    [MemberData(nameof(ProblemsData))]
-    public void SolvingProblems(string[] words, char[] c, string expected)
+    [MemberData(nameof(RepeatedValuesData))]
+    public void SolvingProblems(int[,] matrix, int[] factors, int[] operations, int expected)
     {
-        var result = Utils.SolveProblem(words, c);
+        var result = Utils.SolveProblem(matrix, factors, operations);
         Assert.Equal(expected, result);
     }
 
     [Theory]
-    [InlineData(new string[] { "a" }, new char[] { }, "a")]
-    public void EmptyCharArray(string[] words, char[] c, string expected)
+    [MemberData(nameof(NotRepeatedValuesData))]
+    public void NotRepeatedValues(int[,] matrix, int[] factors, int[] operations, int expected)
     {
-        var result = Utils.SolveProblem(words, c);
+        var result = Utils.SolveProblem(matrix, factors, operations);
         Assert.Equal(expected, result);
     }
 
     [Theory]
-    [InlineData(new string[] { "a", "", "ab" }, new char[] { 'a', 'b' }, "ab")]
-    public void EmptyWords(string[] words, char[] c, string expected)
+    [InlineData(1)]
+    public void EmptyOperators(int seed)
     {
-        var result = Utils.SolveProblem(words, c);
+        var matrix = new int[,] { { 1, 2, 3 },
+                                  { 1, 2, 3 },
+                                  { 1, 2, 3 } };
+        var factors = new int[] { 5, -2, 0 };
+        var operations = new int[] { };
+        var expected = 6;
+        var result = ProblemGestor.Solve(matrix, factors, operations);
         Assert.Equal(expected, result);
     }
 
